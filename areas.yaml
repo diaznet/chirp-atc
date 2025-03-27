@@ -1,0 +1,109 @@
+---
+countries:
+  - name: "Switzerland"
+    country_code: "CH"
+    areas:
+      - name: "Geneva-Leman"
+        reference_postal_code: "1200"
+        reference_city: "Geneva"
+        radius: 50
+      - name: "Lausanne-Vaud"
+        reference_postal_code: "1000"
+        reference_city: "Lausanne"
+        radius: 50
+      - name: "Fribourg-Gruyère"
+        reference_postal_code: "1700"
+        reference_city: "Fribourg"
+        radius: 50
+      - name: "Neuchatel-Jura"
+        reference_postal_code: "2000"
+        reference_city: "Neuchatel"
+        radius: 50
+      - name: "Bern-Capital"
+        reference_postal_code: "3000"
+        reference_city: "Bern"
+        radius: 50
+      - name: "Basel-North"
+        reference_postal_code: "4000"
+        reference_city: "Basel"
+        radius: 50
+      - name: "Valais-Mountains"
+        reference_postal_code: "1950"
+        reference_city: "Sion"
+        radius: 50
+      - name: "Lucerne-Central"
+        reference_postal_code: "6000"
+        reference_city: "Lucerne"
+        radius: 50
+      - name: "Zurich-Metropolis"
+        reference_postal_code: "8001"
+        reference_city: "Zurich"
+        radius: 50
+      - name: "Ticino-South"
+        reference_postal_code: "6900"
+        reference_city: "Lugano"
+        radius: 50
+
+  - name: "France"
+    country_code: "FR"
+    areas:
+      - name: "Île-de-France"
+        reference_postal_code: "45000"
+        reference_city: "Orléans"
+        radius: 150
+      - name: "Normandie-Bretagne Est"
+        reference_postal_code: "50000"
+        reference_city: "Saint-Lô"
+        radius: 150
+      - name: "Bretagne Ouest"
+        reference_postal_code: "29000"
+        reference_city: "Quimper"
+        radius: 150
+      - name: "Pays de la Loire"
+        reference_postal_code: "49000"
+        reference_city: "Angers"
+        radius: 150
+      - name: "Poitou-Charentes"
+        reference_postal_code: "86000"
+        reference_city: "Poitiers"
+        radius: 150
+      - name: "Bordeaux-Aquitaine"
+        reference_postal_code: "33000"
+        reference_city: "Bordeaux"
+        radius: 150
+      - name: "Midi-Pyrénées"
+        reference_postal_code: "31000"
+        reference_city: "Toulouse"
+        radius: 150
+      - name: "Languedoc-Roussillon"
+        reference_postal_code: "34000"
+        reference_city: "Montpellier"
+        radius: 150
+      - name: "Provence-Alpes-Côte d'Azur"
+        reference_postal_code: "13000"
+        reference_city: "Marseille"
+        radius: 150
+      - name: "Rhône-Alpes"
+        reference_postal_code: "69000"
+        reference_city: "Lyon"
+        radius: 150
+      - name: "Bourgogne-Franche-Comté"
+        reference_postal_code: "21000"
+        reference_city: "Dijon"
+        radius: 150
+      - name: "Grand Est Ouest"
+        reference_postal_code: "54000"
+        reference_city: "Nancy"
+        radius: 150
+      - name: "Grand Est Est"
+        reference_postal_code: "67000"
+        reference_city: "Strasbourg"
+        radius: 150
+      - name: "Hauts-de-France Ouest"
+        reference_postal_code: "80000"
+        reference_city: "Amiens"
+        radius: 150
+      - name: "Hauts-de-France Est"
+        reference_postal_code: "59000"
+        reference_city: "Lille"
+        radius: 150

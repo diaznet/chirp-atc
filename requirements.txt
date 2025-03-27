@@ -1,0 +1,5 @@
+google-cloud-storage==3
+pycountry==24.6.1
+geopy
+shapely
+loguru

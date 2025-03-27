@@ -1,0 +1,61 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug: get_frequencies|FR+CH|AllTypes|Console-JSON",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/get_frequencies.py",
+            "console": "integratedTerminal",
+            "env": {
+                "VIRTUAL_ENV": "${workspaceFolder}/.venv",
+                "PATH": "${workspaceFolder}/venv/Scripts;${env:PATH}"
+            },
+            "args": [
+                "--debug",
+                "--country", "FR", "CH",
+                "--type", "airports", "airspaces",
+                "--postal-code", "07000", "8005",
+                "--radius", "55",
+                "--output", "Console-JSON"
+            ]
+        },
+        {
+            "name": "Debug: get_frequencies|FR+CH|AllTypes|CHIRP-CSV",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/get_frequencies.py",
+            "console": "integratedTerminal",
+            "env": {
+                "VIRTUAL_ENV": "${workspaceFolder}/.venv",
+                "PATH": "${workspaceFolder}/venv/Scripts;${env:PATH}"
+            },
+            "args": [
+                "--debug",
+                "--country", "FR", "CH",
+                "--type", "airports", "airspaces",
+                "--output", "CHIRP-CSV"
+            ]
+        },
+        {
+            "name": "Debug: get_frequencies|FR|AllTypes|CHIRP-CSV",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/get_frequencies.py",
+            "console": "integratedTerminal",
+            "env": {
+                "VIRTUAL_ENV": "${workspaceFolder}/.venv",
+                "PATH": "${workspaceFolder}/venv/Scripts;${env:PATH}"
+            },
+            "args": [
+                "--debug",
+                "--country", "FR",
+                "--type", "airports", "airspaces",
+                "--output", "CHIRP-CSV"
+            ]
+        }
+    ]
+}

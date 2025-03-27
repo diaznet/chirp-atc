@@ -1,0 +1,107 @@
+name: Generate CSVs and Publish Release
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  push:
+    branches:
+      - main
+      - '**'  # This ensures the workflow runs on any branch push
+
+permissions:
+  contents: write  # Ensure write access for creating releases
+
+jobs:
+  generate-csvs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyyaml
+        pip install -r requirements.txt
+
+    - name: Generate CSVs
+      run: |
+        python <<EOF
+        import yaml
+        import subprocess
+
+        # Load YAML file
+        with open('areas.yaml', 'r') as file:
+            data = yaml.safe_load(file)
+
+        # Iterate through countries
+        for country in data['countries']:
+            country_code = country['country_code']  # Store country code separately
+            subprocess.run([
+              'python', 'get_frequencies.py', 
+              '--country', country_code, 
+              '--output', 'CHIRP-CSV'
+            ])
+            for area in country['areas']:  # Access areas correctly
+                postal_code = area['reference_postal_code']
+                radius = area['radius']
+                suffix = '_{}'.format(area['name'].replace(' ', '_'))
+                
+                # Run subprocess with correct arguments
+                subprocess.run([
+                    'python', 'get_frequencies.py', 
+                    '--country', country_code, 
+                    '--postal-code', postal_code, 
+                    '--radius', str(radius), 
+                    '--suffix', suffix,
+                    '--output', 'CHIRP-CSV'
+                ])
+        EOF
+
+    - name: Get current date
+      id: date
+      run: echo "release_date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+    - name: Find generated CSV files
+      id: find_csvs
+      run: |
+        files=$(find . -type f \( -iname "*.csv" \) | tr '\n' ' ')
+        echo "csv_files=$files" >> $GITHUB_ENV
+  
+    - name: Keep artifacts when not releasing
+      id: keep_artifacts
+      if: github.event_name != 'schedule' && github.ref != 'refs/heads/main'
+      uses: actions/upload-artifact@v4
+      with:
+        name: CSVs
+        path: |
+          *.CSV
+        retention-days: 5
+
+    - name: Create GitHub Release
+      id: create_release
+      if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: csv-release-${{ env.release_date }}
+        name: CSV Release ${{ env.release_date }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload CSVs to Release
+      if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: csv-release-${{ env.release_date }}
+        files: |
+          *.CSV
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
