@@ -18,7 +18,11 @@ from loguru import logger
 from itertools import zip_longest
 
 
-def main():
+def main() -> None:
+    """
+    Main function to parse command-line arguments, fetch frequency data from OpenAIP,
+    and output results in the requested format.
+    """
 
     supported_frequency_types_list = get_args(OpenAIPFrequencies.get_supported_types())
     default_radius = get_args(OpenAIPFrequencies.get_default_radius())

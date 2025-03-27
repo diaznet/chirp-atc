@@ -19,7 +19,24 @@ from typing import get_args
 
 
 class OpenAIPFrequencies:
-    def __init__(self, _country_code: str, _postal_code: str = None, _radius: int = None):
+    """
+    OpenAIPFrequencies class for retrieving aviation frequencies from OpenAIP.
+
+    Attributes:
+        country_code (str): ISO alpha-2 country code.
+        postal_code (str, optional): Postal code for location-based filtering.
+        radius (int, optional): Search radius in kilometers.
+
+    Methods:
+        _validate_country_code(): Validates the provided country code.
+        _get_openaip_data(type: str) -> dict: Retrieves OpenAIP data for the given type.
+        _get_coordinates_from_postal_code() -> tuple: Gets latitude and longitude from a postal code.
+        _is_within_radius(geometry: dict) -> bool: Checks if a location is within the specified radius.
+        get_supported_types() -> Consts.OEAIP_SUPPORTED_TYPES: Returns the supported frequency types.
+        get_default_radius() -> float: Returns the default radius for searches.
+        get_frequencies(type_: Consts.OEAIP_SUPPORTED_TYPES) -> list: Retrieves filtered frequencies.
+    """
+    def __init__(self, _country_code: str, _postal_code: str = None, _radius: int = None) -> None:
         self.country_code = _country_code
         self._validate_country_code()
 
@@ -34,11 +51,27 @@ class OpenAIPFrequencies:
         else:
             self.radius = Consts.DEFAULT_RADIUS
 
-    def _validate_country_code(self):
+    def _validate_country_code(self) -> None:
+        """
+        Validates the given country code by checking its existence in the pycountry database.
+
+        Raises:
+            ValueError: If the country code is invalid.
+        """
         if not pycountry.countries.get(alpha_2=self.country_code):
             raise ValueError(f"Invalid country code: {self.country_code}")
 
-    def _get_openaip_data(self, type):
+    def _get_openaip_data(self, type) -> dict:
+        """
+        Retrieves OpenAIP data for the specified type from Google Cloud Storage.
+
+        Args:
+            type (str): The type of data to retrieve (e.g., "airports", "airspaces").
+
+        Returns:
+            dict: Parsed JSON data containing OpenAIP information.
+        """
+
         storage_client = storage.Client.create_anonymous_client()
         bucket = storage_client.bucket(Consts.GCS_BUCKET_NAME)
         blob = bucket.blob(Consts.OEAIP_FILENAME_FORMAT.format(
@@ -46,7 +79,17 @@ class OpenAIPFrequencies:
             type_code=Consts.OEAIP_TYPES_MAPPING.get(type, "")))
         return json.loads(blob.download_as_text())
 
-    def _get_coordinates_from_postal_code(self):
+    def _get_coordinates_from_postal_code(self) -> tuple:
+        """
+        Retrieves latitude and longitude based on the provided postal code.
+
+        Returns:
+            tuple: A tuple containing latitude and longitude.
+
+        Raises:
+            ValueError: If the postal code is invalid.
+        """
+
         geolocator = Nominatim(user_agent="geo_locator")
         location = geolocator.geocode({'postalcode': self.postal_code, 'country': self.country_code})
         if location:
@@ -54,7 +97,17 @@ class OpenAIPFrequencies:
         else:
             raise ValueError(f"Invalid postal code: {self.postal_code}")
 
-    def _is_within_radius(self, geometry):
+    def _is_within_radius(self, geometry) -> bool:
+        """
+        Checks whether the given geographic geometry is within the specified radius.
+
+        Args:
+            geometry (dict): A dictionary containing geographic coordinates.
+
+        Returns:
+            bool: True if the location is within the radius, False otherwise.
+        """
+
         geom_type = geometry.get("type")
         coordinates = geometry.get("coordinates")
 
@@ -73,14 +126,38 @@ class OpenAIPFrequencies:
         return False
 
     @staticmethod
-    def get_supported_types():
+    def get_supported_types() -> Consts.OEAIP_SUPPORTED_TYPES:
+        """
+        Returns the supported frequency types defined in the constants.
+
+        Returns:
+            Consts.OEAIP_SUPPORTED_TYPES: Supported types of OpenAIP data.
+        """
+
         return Consts.OEAIP_SUPPORTED_TYPES
 
     @staticmethod
-    def get_default_radius():
+    def get_default_radius() -> float:
+        """
+        Returns the default search radius.
+
+        Returns:
+            float: Default radius in kilometers.
+        """
+
         return Consts.DEFAULT_RADIUS
 
-    def get_frequencies(self, type_: Consts.OEAIP_SUPPORTED_TYPES):
+    def get_frequencies(self, type_: Consts.OEAIP_SUPPORTED_TYPES) -> list:
+        """
+        Retrieves frequencies based on the specified type and location constraints.
+
+        Args:
+            type_ (Consts.OEAIP_SUPPORTED_TYPES): The type of frequencies to retrieve.
+
+        Returns:
+            list: A sorted list of unique frequency dictionaries containing frequency, name, and comment.
+        """
+
         options = get_args(Consts.OEAIP_SUPPORTED_TYPES)
         assert type_ in options, f"'{type_}' is not in {options}"
         aip_data = self._get_openaip_data(type_)
@@ -92,9 +169,7 @@ class OpenAIPFrequencies:
 
                     for frequency in item.get('frequencies', []):
                         # Build the frequency name
-                        logger.debug('icaoCode: {}, altIdentifier: {}, item name: {}, frequency name: {}, frequency: {}'.
-                                        format(item.get('icaoCode'), item.get('altIdentifier'), item.get('name'), frequency.get('name'), frequency.get('value'))
-                                    )
+                        logger.debug('icaoCode: {}, altIdentifier: {}, item name: {}, frequency name: {}, frequency: {}'.format(item.get('icaoCode'), item.get('altIdentifier'), item.get('name'), frequency.get('name'), frequency.get('value')))
                         frequency_name = u' '.join(u"{} {}".format(
                             # Try with 'icaoCode', if not present, use 'altIdentifier'.
                             # Fallback to 'name' of none worked.

@@ -2,6 +2,18 @@ from typing import Literal
 
 
 class Consts():
+    """
+    Consts class containing constant values for OpenAIP data handling.
+
+    Attributes:
+        DEFAULT_RADIUS (float): Default search radius in kilometers.
+        GCS_BUCKET_NAME (str): Google Cloud Storage bucket ID for storing OpenAIP data.
+        OEAIP_SUPPORTED_TYPES (Literal): Supported object types, limited to 'airports' and 'airspaces'.
+        OEAIP_TYPES_MAPPING (dict): Mapping of general object types to OpenAIP-specific type codes.
+        OEAIP_FILENAME_FORMAT (str): Format string for filenames stored in GCS.
+        OEAIP_ENABLED_AIRPORT_TYPES (dict): Dictionary specifying enabled airport and airspace types.
+    """
+
     DEFAULT_RADIUS: float = 50
     GCS_BUCKET_NAME: str = "29f98e10-a489-4c82-ae5e-489dbcd4912f"    # Bucket ID, see https://www.openaip.net/docs
     OEAIP_SUPPORTED_TYPES = Literal["airports", "airspaces"]          # Supported Object types
