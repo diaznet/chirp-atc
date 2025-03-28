@@ -47,21 +47,21 @@ jobs:
               'python', 'get_frequencies.py', 
               '--country', country_code, 
               '--output', 'CHIRP-CSV'
-            ])
-            for area in country['areas']:  # Access areas correctly
-                postal_code = area['reference_postal_code']
-                radius = area['radius']
-                suffix = '_{}'.format(area['name'].replace(' ', '_'))
-                
-                # Run subprocess with correct arguments
-                subprocess.run([
-                    'python', 'get_frequencies.py', 
-                    '--country', country_code, 
-                    '--postal-code', postal_code, 
-                    '--radius', str(radius), 
-                    '--suffix', suffix,
-                    '--output', 'CHIRP-CSV'
-                ])
+          ])
+            for area in country.get('areas', []):
+              postal_code = area['reference_postal_code']
+              radius = area['radius']
+              suffix = '_{}'.format(area['name'].replace(' ', '_'))
+              
+              # Run subprocess with correct arguments
+              subprocess.run([
+                  'python', 'get_frequencies.py', 
+                  '--country', country_code, 
+                  '--postal-code', postal_code, 
+                  '--radius', str(radius), 
+                  '--suffix', suffix,
+                  '--output', 'CHIRP-CSV'
+              ])
         EOF
 
     - name: Get current date
@@ -72,6 +72,7 @@ jobs:
       id: find_csvs
       run: |
         files=$(find . -type f \( -iname "*.csv" \) | tr '\n' ' ')
+        echo "Found CSV files: $files"
         echo "csv_files=$files" >> $GITHUB_ENV
   
     - name: Keep artifacts when not releasing

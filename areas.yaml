@@ -1,5 +1,7 @@
 ---
 countries:
+  - name: "United Kingdom"
+    country_code: "GB"
   - name: "Switzerland"
     country_code: "CH"
     areas:
