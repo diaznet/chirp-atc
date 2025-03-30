@@ -3,19 +3,38 @@ CHIRP files for ATC frequencies
 
 This repository aims to generate CHIRP memory files to be loaded in your Quansheng radio.
 
-![screenshot](img/qs.jpg)
+
+<p align="center">
+  <img src="img/qs.jpg" />
+</p>
+
+
+# Table of contents
+
+- [Generated CSVs](#generated-csvs)
+    - [Areas Table](#areas-table)
+- [get_frequencies.py](#get_frequencies.py)
+    - [Features](#features)
+    - [Installation](#installation)
+    - [Usage](#usage)
+        - [Command Line Arguments](#command-line-arguments)
+    - [Example Usage](#example-usage)
+    - [Data Attribution](#data-attribution)
+    - [License](#license)
 
 # Generated CSVs
 
 Generated CSVs are available in the release tab of this repository. The files are generated once a day.
 
-There is a set per country, and a set per area (see [below](#areas-table)).
+There is a set per country, and a set per specific area (see [below](#areas-table)).
 
 For more CSVs, pull-request or open an issue.
 
 ## Areas Table
 
-The following table represents the currently generated CSVs:
+Since Quansheng radios can only handle around 200 frequencies in memory, I have created smaller, area-specific lists.
+
+The following table represents the currently areas-specific generated CSVs:
 
 | Country      | Area Name              | Postal Code | Radius (km) | Reference City |
 |--------------|------------------------|-------------|-------------|----------------|
@@ -44,6 +63,15 @@ The following table represents the currently generated CSVs:
 | France       | Grand Est Est           | 67000       | 150         | Strasbourg     |
 | France       | Hauts-de-France Ouest   | 80000       | 150         | Amiens         |
 | France       | Hauts-de-France Est     | 59000       | 150         | Lille          |
+| Great Britain | London and South East | EC1A        | 150         | London                 |
+| Great Britain | Midlands              | B1          | 150         | Birmingham             |
+| Great Britain | North West England    | M1          | 150         | Manchester             |
+| Great Britain | Yorkshire and Humber  | LS1         | 150         | Leeds                  |
+| Great Britain | North East England    | NE1         | 150         | Newcastle upon Tyne    |
+| Great Britain | South West England    | BS1         | 150         | Bristol                |
+| Great Britain | Wales                 | CF10        | 150         | Cardiff                |
+| Great Britain | Scotland Central Belt | G1          | 150         | Glasgow                |
+| Great Britain | Scotland North        | AB10        | 150         | Aberdeen               |
 
 # get_frequencies.py
 
