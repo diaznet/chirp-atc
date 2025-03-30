@@ -1,7 +1,44 @@
 ---
 countries:
-  - name: "United Kingdom"
+  - name: "Great Britain"
     country_code: "GB"
+    areas:
+      - name: "London and South East"
+        reference_postal_code: "EC1A"
+        reference_city: "London"
+        radius: 150
+      - name: "Midlands"
+        reference_postal_code: "B1"
+        reference_city: "Birmingham"
+        radius: 150
+      - name: "North West England"
+        reference_postal_code: "M1"
+        reference_city: "Manchester"
+        radius: 150
+      - name: "Yorkshire and Humber"
+        reference_postal_code: "LS1"
+        reference_city: "Leeds"
+        radius: 150
+      - name: "North East England"
+        reference_postal_code: "NE1"
+        reference_city: "Newcastle upon Tyne"
+        radius: 150
+      - name: "South West England"
+        reference_postal_code: "BS1"
+        reference_city: "Bristol"
+        radius: 150
+      - name: "Wales"
+        reference_postal_code: "CF10"
+        reference_city: "Cardiff"
+        radius: 150
+      - name: "Scotland Central Belt"
+        reference_postal_code: "G1"
+        reference_city: "Glasgow"
+        radius: 150
+      - name: "Scotland North"
+        reference_postal_code: "AB10"
+        reference_city: "Aberdeen"
+        radius: 150
   - name: "Switzerland"
     country_code: "CH"
     areas:
@@ -45,7 +82,6 @@ countries:
         reference_postal_code: "6900"
         reference_city: "Lugano"
         radius: 50
-
   - name: "France"
     country_code: "FR"
     areas:

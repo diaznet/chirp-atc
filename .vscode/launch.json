@@ -41,7 +41,7 @@
             ]
         },
         {
-            "name": "Debug: get_frequencies|FR|AllTypes|CHIRP-CSV",
+            "name": "Debug: get_frequencies|CH|Airspaces|CHIRP-CSV",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/get_frequencies.py",
@@ -52,8 +52,26 @@
             },
             "args": [
                 "--debug",
-                "--country", "FR",
-                "--type", "airports", "airspaces",
+                "--country", "CH",
+                "--type", "airspaces",
+                "--output", "CHIRP-CSV"
+            ]
+        },
+        {
+            "name": "Debug: get_frequencies|GB|EC1A|Airports|Console-JSON",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/get_frequencies.py",
+            "console": "integratedTerminal",
+            "env": {
+                "VIRTUAL_ENV": "${workspaceFolder}/.venv",
+                "PATH": "${workspaceFolder}/venv/Scripts;${env:PATH}"
+            },
+            "args": [
+                "--debug",
+                "--country", "GB",
+                "--type", "airspaces",
+                "--postal-code", "EC1A",
                 "--output", "CHIRP-CSV"
             ]
         }

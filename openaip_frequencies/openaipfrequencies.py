@@ -90,8 +90,8 @@ class OpenAIPFrequencies:
             ValueError: If the postal code is invalid.
         """
 
-        geolocator = Nominatim(user_agent="geo_locator")
-        location = geolocator.geocode({'postalcode': self.postal_code, 'country': self.country_code})
+        geolocator = Nominatim(user_agent="OpenAIPFrequencies class from chirp-atc (see https://github.com/diaznet/chirp-atc)")
+        location = geolocator.geocode({'postalCode': self.postal_code, 'country': self.country_code})
         if location:
             return (location.latitude, location.longitude)
         else:
@@ -177,7 +177,7 @@ class OpenAIPFrequencies:
                                 'icaoCode',
                                 item.get('altIdentifier', '')
                                 ),
-                            frequency.get('name')).split())
+                            frequency.get('name', item.get('name'))).split())
                         frequencies.append({
                             "frequency": frequency.get('value'),
                             "name": frequency_name,
