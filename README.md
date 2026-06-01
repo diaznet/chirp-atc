@@ -32,7 +32,7 @@ For more CSVs, pull-request or open an issue.
 
 ## Areas Table
 
-Since Quansheng radios can only handle around 200 frequencies in memory, I have created smaller, area-specific lists.
+Since old Quansheng radios can only handle around 200 frequencies in memory, I have created smaller, area-specific lists.
 
 The following table represents the currently areas-specific generated CSVs:
 
@@ -72,6 +72,7 @@ The following table represents the currently areas-specific generated CSVs:
 | Great Britain | Wales                 | CF10        | 150         | Cardiff                |
 | Great Britain | Scotland Central Belt | G1          | 150         | Glasgow                |
 | Great Britain | Scotland North        | AB10        | 150         | Aberdeen               |
+| Belgium       | Belgium               | 1000        | 100         | Brussels               |
 
 # get_frequencies.py
 
@@ -180,6 +181,14 @@ options:
     ```bash
     python get_frequencies.py -c US -o CHIRP-CSV
     ```
+
+## 8.33 kHz Channel Spacing
+
+EU airband uses 8.33 kHz channel spacing. The frequencies published in AIPs are **channel designators**, not actual RF frequencies. This tool converts channel designators to actual center frequencies per ICAO Doc 9718.
+
+References:
+- [ICAO Doc 9718 Vol II - Frequency/Channel Allotment Table](https://www.icao.int/sites/default/files/FSMP/Doc.9718-Vol-II_Supplement_30June2017.pdf)
+- [Ofcom - Understanding 8.33kHz frequencies and their specific channel number](https://www.ofcom.org.uk/siteassets/resources/documents/manage-your-licence/aeronautical/guidance/understanding-8.33khz-frequencies-and-their-specific-channel-number.pdf?v=323879)
 
 ## Data Attribution
 

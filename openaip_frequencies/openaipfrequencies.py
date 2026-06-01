@@ -18,6 +18,26 @@ from .consts import Consts
 from typing import get_args
 
 
+def channel_to_frequency(channel_mhz: float) -> str:
+    """
+    Convert an 8.33 kHz channel designator (as published in AIPs) to the actual
+    RF center frequency, per ICAO Doc 9718.
+
+    Each 25 kHz block has 4 channel designators spaced 5 kHz apart:
+      Position 0 (00/25/50/75): freq = base (25 kHz legacy channel)
+      Position 1 (05/30/55/80): freq = base (same center frequency)
+      Position 2 (10/35/60/85): freq = base + 8.333 kHz
+      Position 3 (15/40/65/90): freq = base + 16.667 kHz
+
+    See references/Doc9718-Vol-II.md and references/understanding-8.33khz.md
+    """
+    khz = round(channel_mhz * 1000)
+    remainder = (khz % 100) % 25
+    base_khz = khz - remainder
+    offset_khz = {0: 0, 5: 0, 10: 25.0 / 3, 15: 50.0 / 3}.get(remainder, 0)
+    return f"{round((base_khz + offset_khz) / 1000.0, 4):.5f}"
+
+
 class OpenAIPFrequencies:
     """
     OpenAIPFrequencies class for retrieving aviation frequencies from OpenAIP.
@@ -46,10 +66,10 @@ class OpenAIPFrequencies:
 
         if _radius:
             self.radius = _radius
-        if not _radius and not _postal_code:
-            self.radius = _radius
-        else:
+        elif _postal_code:
             self.radius = Consts.DEFAULT_RADIUS
+        else:
+            self.radius = None
 
     def _validate_country_code(self) -> None:
         """
@@ -178,8 +198,10 @@ class OpenAIPFrequencies:
                                 item.get('altIdentifier', '')
                                 ),
                             frequency.get('name', item.get('name'))).split())
+                        raw_freq = frequency.get('value')
+                        actual_freq = channel_to_frequency(float(raw_freq))
                         frequencies.append({
-                            "frequency": frequency.get('value'),
+                            "frequency": actual_freq,
                             "name": frequency_name,
                             "comment": type_.upper()
                         })

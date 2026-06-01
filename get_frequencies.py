@@ -25,7 +25,7 @@ def main() -> None:
     """
 
     supported_frequency_types_list = get_args(OpenAIPFrequencies.get_supported_types())
-    default_radius = get_args(OpenAIPFrequencies.get_default_radius())
+    default_radius = OpenAIPFrequencies.get_default_radius()
     supported_frequency_types_str = ', '.join(repr(value) for value in supported_frequency_types_list)
 
     parser = argparse.ArgumentParser(description="Get frequencies for a specific country from openAIP.")
@@ -80,11 +80,12 @@ def main() -> None:
     # Parse the arguments
     args = parser.parse_args()
 
+    logger.remove()
     if args.debug:
-        level = 'DEBUG'
+        logger.enable("openaip_frequencies")
+        logger.add(sys.stderr, level='DEBUG')
     else:
-        level = 'INFO'
-    logger.add(sys.stdout, level=level)
+        logger.add(sys.stderr, level='INFO')
 
     for country, postal_code in zip_longest(args.country, args.postal_code, fillvalue=None):
         freq = OpenAIPFrequencies(country, postal_code, args.radius)
@@ -104,6 +105,8 @@ def main() -> None:
                         else:
                             row[config['header_name']] = config['default_value']
                     rows.append(row)
+                if not rows:
+                    continue
                 with open('{}_{}{}.csv'.format(country, type, args.suffix).upper(), mode="w", encoding='utf-8', newline="") as file:
                     writer = csv.DictWriter(file, fieldnames=rows[0].keys())
                     writer.writeheader()

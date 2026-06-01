@@ -145,3 +145,10 @@ countries:
         reference_postal_code: "59000"
         reference_city: "Lille"
         radius: 150
+  - name: "Belgium"
+    country_code: "BE"
+    areas:
+      - name: "Belgium"
+        reference_postal_code: "1000"
+        reference_city: "Brussels"
+        radius: 100

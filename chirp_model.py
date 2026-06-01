@@ -69,7 +69,7 @@ chirp_csv_model: dict = {
     'tstep': {
         'header_name': 'TStep',
         'type': str,
-        'default_value': '5',
+        'default_value': '8.33',
     },
     'skip': {
         'header_name': 'Skip',
