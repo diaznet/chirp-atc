@@ -85,6 +85,12 @@ jobs:
           *.CSV
         retention-days: 5
 
+    - name: Delete existing release if same tag
+      if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
+      run: gh release delete csv-release-${{ env.release_date }} --yes --cleanup-tag || true
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Create GitHub Release and Upload CSVs
       if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v1
@@ -93,7 +99,6 @@ jobs:
         name: CSV Release ${{ env.release_date }}
         draft: false
         prerelease: false
-        fail_on_unmatched_files: false
         files: |
           *.CSV
       env:
