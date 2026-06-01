@@ -85,8 +85,7 @@ jobs:
           *.CSV
         retention-days: 5
 
-    - name: Create GitHub Release
-      id: create_release
+    - name: Create GitHub Release and Upload CSVs
       if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v1
       with:
@@ -94,14 +93,7 @@ jobs:
         name: CSV Release ${{ env.release_date }}
         draft: false
         prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Upload CSVs to Release
-      if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: csv-release-${{ env.release_date }}
+        fail_on_unmatched_files: false
         files: |
           *.CSV
       env:
