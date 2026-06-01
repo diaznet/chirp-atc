@@ -199,6 +199,8 @@ class OpenAIPFrequencies:
                                 ),
                             frequency.get('name', item.get('name'))).split())
                         raw_freq = frequency.get('value')
+                        if raw_freq is None:
+                            continue
                         actual_freq = channel_to_frequency(float(raw_freq))
                         frequencies.append({
                             "frequency": actual_freq,
