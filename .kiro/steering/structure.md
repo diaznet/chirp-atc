@@ -3,7 +3,7 @@
 ## Directory Layout
 ```
 chirp-atc/
-├── .amazonq/rules/          # Amazon Q rules and memory bank
+├── .kiro/steering/          # Kiro steering files
 ├── .github/workflows/       # CI/CD pipeline (CSV generation + release)
 ├── img/                     # Documentation images
 ├── openaip_frequencies/     # Core library package

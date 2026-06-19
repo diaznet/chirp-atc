@@ -1,3 +1,5 @@
+🌐 [English](README.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
+
 # chirp-atc
 CHIRP files for ATC frequencies
 
