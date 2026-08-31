@@ -4,7 +4,7 @@
 Generate CHIRP-compatible CSV memory files for Quansheng radios containing ATC (Air Traffic Control) frequencies sourced from OpenAIP. Enables aviation enthusiasts to listen to EU airband communications.
 
 ## Key Features
-- Extracts airport and airspace ATC frequencies from OpenAIP's public GCS bucket
+- Extracts airport and airspace ATC frequencies from OpenAIP's public data exports
 - Converts 8.33 kHz channel designators to actual RF center frequencies per ICAO Doc 9718
 - Filters by country (ISO alpha-2 codes), frequency type, postal code, and radius
 - Outputs CHIRP-CSV format (ready to load into radio) or Console-JSON (for inspection)

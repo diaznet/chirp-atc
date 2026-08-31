@@ -47,4 +47,4 @@ Must be `8.33` for EU airband.
 - UK CAA "Understanding 8.33kHz frequencies" — explanation of 8.33 kHz scheme
 
 ## Data Source
-Frequencies come from OpenAIP's public GCS bucket (`29f98e10-a489-4c82-ae5e-489dbcd4912f`), files like `ch_apt.json`. The `value` field in their JSON is the **channel designator**, not the actual RF frequency.
+Frequencies come from OpenAIP's public export storage over anonymous HTTPS (`https://storage.openaip.net/openaip-system-exports/`), files like `ch_apt.json`. (OpenAIP previously served these from a GCS bucket; the dataset moved to this S3-compatible HTTPS endpoint.) The `value` field in their JSON is the **channel designator**, not the actual RF frequency.

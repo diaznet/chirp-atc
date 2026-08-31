@@ -7,21 +7,23 @@ class Consts():
 
     Attributes:
         DEFAULT_RADIUS (float): Default search radius in kilometers.
-        GCS_BUCKET_NAME (str): Google Cloud Storage bucket ID for storing OpenAIP data.
+        OEAIP_EXPORTS_BASE_URL (str): Base URL of OpenAIP's public export storage.
         OEAIP_SUPPORTED_TYPES (Literal): Supported object types, limited to 'airports' and 'airspaces'.
         OEAIP_TYPES_MAPPING (dict): Mapping of general object types to OpenAIP-specific type codes.
-        OEAIP_FILENAME_FORMAT (str): Format string for filenames stored in GCS.
+        OEAIP_FILENAME_FORMAT (str): Format string for the export filenames.
         OEAIP_ENABLED_AIRPORT_TYPES (dict): Dictionary specifying enabled airport and airspace types.
     """
 
     DEFAULT_RADIUS: float = 50
-    GCS_BUCKET_NAME: str = "29f98e10-a489-4c82-ae5e-489dbcd4912f"    # Bucket ID, see https://www.openaip.net/docs
+    # OpenAIP publishes daily exports on a public HTTPS/S3 endpoint (anonymous GET).
+    # See https://www.openaip.net/docs
+    OEAIP_EXPORTS_BASE_URL: str = "https://storage.openaip.net/openaip-system-exports"
     OEAIP_SUPPORTED_TYPES = Literal["airports", "airspaces"]          # Supported Object types
     OEAIP_TYPES_MAPPING: dict = {                                         # Corresponding types in OpenAIP
         "airports": "apt",
         "airspaces": "asp",
     }
-    OEAIP_FILENAME_FORMAT:  str = "{country_code}_{type_code}.json"         # File format in GCS
+    OEAIP_FILENAME_FORMAT:  str = "{country_code}_{type_code}.json"         # Export file format
     OEAIP_ENABLED_AIRPORT_TYPES: dict = {
         # Selected Airport types
         # See schema at https://docs.openaip.net/#/Airports/get_airports__id_
