@@ -8,7 +8,7 @@ chirp-atc/
 ├── img/                     # Documentation images
 ├── openaip_frequencies/     # Core library package
 │   ├── __init__.py          # Package exports
-│   ├── consts.py            # Constants (GCS bucket, frequency types, CHIRP defaults)
+│   ├── consts.py            # Constants (export base URL, frequency types, CHIRP defaults)
 │   └── openaipfrequencies.py # Main class: fetch, parse, filter, convert frequencies
 ├── areas.yaml               # Area definitions (country, postal code, radius)
 ├── chirp_model.py           # CHIRP CSV data model and file writer
@@ -25,11 +25,11 @@ chirp-atc/
 
 ### openaip_frequencies/ (Library Package)
 - **openaipfrequencies.py**: Main `OpenAIPFrequencies` class
-  - Fetches JSON data from OpenAIP's GCS bucket
+  - Fetches JSON data from OpenAIP's public export storage (HTTPS)
   - Parses airport and airspace frequency data
   - Applies geographic filtering (postal code + radius using geopy/shapely)
   - Converts 8.33 kHz channel designators to actual RF frequencies
-- **consts.py**: Configuration constants (bucket ID, frequency type mappings, CHIRP field defaults)
+- **consts.py**: Configuration constants (export base URL, frequency type mappings, CHIRP field defaults)
 - **__init__.py**: Package-level exports
 
 ### chirp_model.py (Output Layer)
@@ -42,7 +42,7 @@ chirp-atc/
 - Each area: country code, name, postal code, radius, reference city
 
 ## Architectural Pattern
-Pipeline architecture: **Data Source (GCS) → Fetch → Parse → Filter (geo) → Convert (8.33kHz) → Format (CHIRP CSV) → Output**
+Pipeline architecture: **Data Source (OpenAIP HTTPS exports) → Fetch → Parse → Filter (geo) → Convert (8.33kHz) → Format (CHIRP CSV) → Output**
 
 ## CI/CD
 - GitHub Actions workflow runs weekly (Monday 06:00 UTC) and on push to main

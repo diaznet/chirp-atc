@@ -8,7 +8,7 @@ Description: Class definition for OpenAIPFrequencies
 # Import necessary modules
 import pycountry
 import json
-from google.cloud import storage
+import urllib.request
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 from shapely.geometry import Polygon
@@ -83,7 +83,11 @@ class OpenAIPFrequencies:
 
     def _get_openaip_data(self, type) -> dict:
         """
-        Retrieves OpenAIP data for the specified type from Google Cloud Storage.
+        Retrieves OpenAIP data for the specified type from the public export storage.
+
+        OpenAIP publishes daily dataset exports on a public HTTPS/S3 endpoint that
+        serves anonymous GET requests (see https://www.openaip.net/docs). The file
+        for a given country/type is fetched directly over HTTPS.
 
         Args:
             type (str): The type of data to retrieve (e.g., "airports", "airspaces").
@@ -92,12 +96,14 @@ class OpenAIPFrequencies:
             dict: Parsed JSON data containing OpenAIP information.
         """
 
-        storage_client = storage.Client.create_anonymous_client()
-        bucket = storage_client.bucket(Consts.GCS_BUCKET_NAME)
-        blob = bucket.blob(Consts.OEAIP_FILENAME_FORMAT.format(
+        filename = Consts.OEAIP_FILENAME_FORMAT.format(
             country_code=self.country_code.lower(),
-            type_code=Consts.OEAIP_TYPES_MAPPING.get(type, "")))
-        return json.loads(blob.download_as_text())
+            type_code=Consts.OEAIP_TYPES_MAPPING.get(type, ""))
+        url = "{base_url}/{filename}".format(
+            base_url=Consts.OEAIP_EXPORTS_BASE_URL, filename=filename)
+        logger.debug("Fetching OpenAIP export from {}".format(url))
+        with urllib.request.urlopen(url) as response:
+            return json.loads(response.read().decode("utf-8"))
 
     def _get_coordinates_from_postal_code(self) -> tuple:
         """

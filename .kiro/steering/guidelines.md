@@ -6,7 +6,7 @@
 - **Files**: snake_case (`get_frequencies.py`, `chirp_model.py`)
 - **Classes**: PascalCase (`OpenAIPFrequencies`, `Consts`)
 - **Functions/methods**: snake_case (`get_frequencies`, `channel_to_frequency`)
-- **Constants**: UPPER_SNAKE_CASE (`DEFAULT_RADIUS`, `GCS_BUCKET_NAME`)
+- **Constants**: UPPER_SNAKE_CASE (`DEFAULT_RADIUS`, `OEAIP_EXPORTS_BASE_URL`)
 - **Private methods**: prefixed with underscore (`_validate_country_code`, `_get_openaip_data`)
 - **Constructor params**: prefixed with underscore (`_country_code`, `_postal_code`)
 
@@ -87,12 +87,12 @@ item.get('icaoCode', item.get('altIdentifier', ''))
 ## Error Handling
 - `ValueError` raised for invalid country codes and postal codes
 - `assert` used for type validation in `get_frequencies()`
-- No try/except wrapping of GCS calls (fails loudly)
+- No try/except wrapping of the HTTPS export fetch (fails loudly)
 
 ## Dependencies Usage
 | Library | Usage Pattern |
 |---------|--------------|
-| google-cloud-storage | Anonymous client, bucket access, blob download as text |
+| urllib.request (stdlib) | Anonymous HTTPS GET of the export file, decode + json.loads |
 | pycountry | `pycountry.countries.get(alpha_2=code)` for validation |
 | geopy | `Nominatim` geocoder with custom user_agent string |
 | shapely | `Polygon` creation from coordinate lists, centroid calculation |

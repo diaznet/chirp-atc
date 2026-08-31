@@ -6,7 +6,6 @@
 ## Dependencies (requirements.txt)
 | Package | Version | Purpose |
 |---------|---------|---------|
-| google-cloud-storage | 3 | Fetch frequency data from OpenAIP's public GCS bucket |
 | pycountry | 24.6.1 | ISO country code validation and lookup |
 | geopy | latest | Geocoding postal codes to lat/lon coordinates |
 | shapely | latest | Geographic filtering (point-in-circle radius checks) |
@@ -37,8 +36,9 @@ python get_frequencies.py -h
 Channel designators from OpenAIP are converted to actual RF frequencies using ICAO Doc 9718 mapping. The CHIRP CSV `TStep` field is set to `8.33` for EU airband.
 
 ## Data Source
-- OpenAIP public GCS bucket: `29f98e10-a489-4c82-ae5e-489dbcd4912f`
+- OpenAIP public export storage (anonymous HTTPS GET): `https://storage.openaip.net/openaip-system-exports/`
 - Files: `{country_code}_apt.json` (airports), `{country_code}_asp.json` (airspaces)
+- Fetched via Python stdlib `urllib.request` (no external client library required)
 
 ## CI/CD
 - GitHub Actions (ubuntu-latest, Python 3.x)
