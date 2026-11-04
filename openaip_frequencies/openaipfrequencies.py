@@ -35,13 +35,19 @@ def channel_to_frequency(channel_mhz: float) -> str:
       Position 2 (10/35/60/85): freq = base + 8.333 kHz
       Position 3 (15/40/65/90): freq = base + 16.667 kHz
 
+    The result is in MHz with 6 decimals (1 Hz resolution, as CHIRP formats
+    frequencies), using the same 8333 / 16666 Hz offsets as CHIRP's 8.33 kHz
+    channel grid. Coarser rounding (e.g. 118.0083) puts the frequency off that
+    grid, and CHIRP then finds no valid tuning step for it.
+
     See references/Doc9718-Vol-II.md and references/understanding-8.33khz.md
     """
     khz = round(channel_mhz * 1000)
-    remainder = (khz % 100) % 25
-    base_khz = khz - remainder
-    offset_khz = {0: 0, 5: 0, 10: 25.0 / 3, 15: 50.0 / 3}.get(remainder, 0)
-    return f"{round((base_khz + offset_khz) / 1000.0, 4):.5f}"
+    remainder = khz % 25
+    base_hz = (khz - remainder) * 1000
+    offset_hz = {0: 0, 5: 0, 10: 25000 // 3, 15: 2 * (25000 // 3)}.get(remainder, 0)
+    hz = base_hz + offset_hz
+    return f"{hz // 1_000_000}.{hz % 1_000_000:06d}"
 
 
 @lru_cache(maxsize=None)
