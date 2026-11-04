@@ -26,7 +26,12 @@ Dieses Repository generiert CHIRP-Speicherdateien zum Laden in Ihr Quansheng-Fun
 
 # Generierte CSVs
 
-Die generierten CSVs sind im „Releases"-Tab dieses Repositories verfügbar. Die Dateien werden einmal täglich generiert.
+Die generierten CSVs sind im „Releases"-Tab dieses Repositories verfügbar. Die Releases folgen dem [AIRAC](https://de.wikipedia.org/wiki/Luftfahrthandbuch)-Zyklus: Alle 28 Tage wird zum Gültigkeitsdatum des Zyklus ein neues Release (z. B. `airac-2611`) veröffentlicht.
+
+Die neueste Version jeder Datei ist immer über einen festen Link erreichbar, zum Beispiel:
+`https://github.com/diaznet/chirp-atc/releases/latest/download/CH_AIRPORTS_GENEVA-LEMAN.CSV`
+
+Hinweis: Die Daten stammen von OpenAIP, einer von der Community gepflegten Datenbank, die selbst nicht nach dem AIRAC-Zeitplan aktualisiert wird.
 
 Es gibt einen Satz pro Land und einen Satz pro spezifischem Gebiet (siehe [unten](#gebiets-tabelle)).
 

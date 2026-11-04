@@ -1,17 +1,16 @@
 """
-Filename: openaipfrequencies.py
+Filename: get_frequencies.py
 Author: Jeremy Diaz
 Date: 2025-03-25
-Description: Class definition for OpenAIPFrequencies
+Description: CLI to extract ATC frequencies from OpenAIP as JSON or CHIRP CSV
 """
 
 # Import necessary modules
 from openaip_frequencies.openaipfrequencies import OpenAIPFrequencies
-from chirp_model import chirp_csv_model
+from chirp_model import csv_filename, write_chirp_csv
 
 import json
 import argparse
-import csv
 import sys
 from typing import get_args
 from loguru import logger
@@ -94,23 +93,7 @@ def main() -> None:
             if args.output == "Console-JSON":
                 print(json.dumps(frequencies, indent=2))
             if args.output == 'CHIRP-CSV':
-                rows = []
-                for index, freq_data in enumerate(frequencies, start=0):
-                    row = {}
-                    for key, config in chirp_csv_model.items():
-                        if key == 'location':
-                            row[config['header_name']] = index  # Assign incremental location
-                        elif 'mapped_openaip_key' in config and config['mapped_openaip_key'] in freq_data:
-                            row[config['header_name']] = freq_data[config['mapped_openaip_key']]
-                        else:
-                            row[config['header_name']] = config['default_value']
-                    rows.append(row)
-                if not rows:
-                    continue
-                with open('{}_{}{}.csv'.format(country, type, args.suffix).upper(), mode="w", encoding='utf-8', newline="") as file:
-                    writer = csv.DictWriter(file, fieldnames=rows[0].keys())
-                    writer.writeheader()
-                    writer.writerows(rows)
+                write_chirp_csv(csv_filename(country, type, args.suffix), frequencies)
 
 
 if __name__ == "__main__":

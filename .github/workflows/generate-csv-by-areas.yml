@@ -1,15 +1,31 @@
-name: Generate CSVs and Publish Release
+name: Generate CSVs and Publish AIRAC Release
 
+# Releases follow the AIRAC cycle (28 days, effective on Thursdays).
+# GitHub cron cannot express "every 28 days", so the schedule runs daily and
+# only generates/publishes when the current cycle has no release yet. A missed
+# or delayed scheduled run is therefore caught up by the next one.
+#
+# - schedule:          publish airac-YYNN once, on (or right after) its effective date
+# - push / dispatch to main: regenerate and update the current cycle's release in place
+# - other branches:    build only, CSVs kept as workflow artifacts
 on:
   schedule:
-    - cron: '0 6 * * 1'
+    - cron: '0 6 * * *'
   push:
     branches:
-      - main
-      - '**'  # This ensures the workflow runs on any branch push
+      - '**'
+  workflow_dispatch:
 
 permissions:
-  contents: write  # Ensure write access for creating releases
+  contents: write  # Required to create and update releases
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GH_REPO: ${{ github.repository }}
 
 jobs:
   generate-csvs:
@@ -17,89 +33,96 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v7
       with:
-        python-version: '3.x'
+        python-version: '3.12'
+        cache: pip
+        cache-dependency-path: requirements*.txt
+
+    - name: Compute current AIRAC cycle
+      id: airac
+      run: python airac.py
+
+    - name: Decide whether to generate and publish
+      id: gate
+      env:
+        TAG: airac-${{ steps.airac.outputs.ident }}
+      run: |
+        if gh release view "$TAG" >/dev/null 2>&1; then exists=true; else exists=false; fi
+        if [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
+          if [ "$exists" = "true" ]; then generate=false; else generate=true; fi
+          publish=$generate
+        elif [ "$GITHUB_REF" = "refs/heads/main" ]; then
+          generate=true; publish=true
+        else
+          generate=true; publish=false
+        fi
+        echo "Release $TAG exists: $exists -> generate=$generate publish=$publish"
+        {
+          echo "tag=$TAG"
+          echo "generate=$generate"
+          echo "publish=$publish"
+        } >> "$GITHUB_OUTPUT"
 
     - name: Install dependencies
+      if: steps.gate.outputs.generate == 'true'
       run: |
         python -m pip install --upgrade pip
-        pip install pyyaml
-        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+
+    - name: Run tests
+      if: steps.gate.outputs.generate == 'true'
+      run: python -m pytest -q
 
     - name: Generate CSVs
+      if: steps.gate.outputs.generate == 'true'
       run: |
-        python <<EOF
-        import yaml
-        import subprocess
+        python build_all.py --areas areas.yaml --output-dir dist
+        echo "fetched_at=$(date -u +'%Y-%m-%d %H:%M UTC')" >> "$GITHUB_ENV"
 
-        # Load YAML file
-        with open('areas.yaml', 'r') as file:
-            data = yaml.safe_load(file)
-
-        # Iterate through countries
-        for country in data['countries']:
-            country_code = country['country_code']  # Store country code separately
-            subprocess.run([
-              'python', 'get_frequencies.py', 
-              '--country', country_code, 
-              '--output', 'CHIRP-CSV'
-          ])
-            for area in country.get('areas', []):
-              postal_code = area['reference_postal_code']
-              radius = area['radius']
-              suffix = '_{}'.format(area['name'].replace(' ', '_'))
-              
-              # Run subprocess with correct arguments
-              subprocess.run([
-                  'python', 'get_frequencies.py', 
-                  '--country', country_code, 
-                  '--postal-code', postal_code, 
-                  '--radius', str(radius), 
-                  '--suffix', suffix,
-                  '--output', 'CHIRP-CSV'
-              ])
-        EOF
-
-    - name: Get current date
-      id: date
-      run: echo "release_date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
-    - name: Find generated CSV files
-      id: find_csvs
-      run: |
-        files=$(find . -type f \( -iname "*.csv" \) | tr '\n' ' ')
-        echo "Found CSV files: $files"
-        echo "csv_files=$files" >> $GITHUB_ENV
-  
     - name: Keep artifacts when not releasing
-      id: keep_artifacts
-      if: github.event_name != 'schedule' && github.ref != 'refs/heads/main'
-      uses: actions/upload-artifact@v4
+      if: steps.gate.outputs.generate == 'true' && steps.gate.outputs.publish != 'true'
+      uses: actions/upload-artifact@v7
       with:
-        name: CSVs
-        path: |
-          *.CSV
+        name: CSVs-AIRAC-${{ steps.airac.outputs.ident }}
+        path: dist/*.CSV
         retention-days: 5
 
-    - name: Delete existing release if same tag
-      if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
-      run: gh release delete csv-release-${{ env.release_date }} --yes --cleanup-tag || true
+    - name: Create or update AIRAC release
+      if: steps.gate.outputs.publish == 'true'
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: ${{ steps.gate.outputs.tag }}
+        IDENT: ${{ steps.airac.outputs.ident }}
+        EFFECTIVE: ${{ steps.airac.outputs.effective }}
+        NEXT_EFFECTIVE: ${{ steps.airac.outputs.next_effective }}
+      run: |
+        title="AIRAC ${IDENT} (effective ${EFFECTIVE})"
+        cat > notes.md <<EOF
+        CHIRP CSV files for AIRAC cycle **${IDENT}**.
 
-    - name: Create GitHub Release and Upload CSVs
-      if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: csv-release-${{ env.release_date }}
-        name: CSV Release ${{ env.release_date }}
-        draft: false
-        prerelease: false
-        files: |
-          *.CSV
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        - Effective: ${EFFECTIVE}
+        - Next cycle: ${NEXT_EFFECTIVE}
+        - OpenAIP data fetched: ${fetched_at}
+        - Built from: ${GITHUB_SHA}
+
+        Data is sourced from [OpenAIP](https://www.openaip.net/), a community-maintained
+        database that is not itself updated on the AIRAC schedule. Always check official
+        publications before relying on a frequency.
+        EOF
+
+        if gh release view "$TAG" >/dev/null 2>&1; then
+          echo "Updating existing release $TAG"
+          gh release upload "$TAG" dist/*.CSV --clobber
+          # Remove assets that are no longer generated (e.g. a renamed area).
+          gh release view "$TAG" --json assets --jq '.assets[].name' | while read -r asset; do
+            [ -f "dist/$asset" ] || gh release delete-asset "$TAG" "$asset" --yes
+          done
+          gh release edit "$TAG" --title "$title" --notes-file notes.md --latest
+        else
+          echo "Creating release $TAG"
+          gh release create "$TAG" dist/*.CSV --title "$title" --notes-file notes.md \
+            --target "$GITHUB_SHA" --latest
+        fi

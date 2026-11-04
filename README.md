@@ -26,7 +26,12 @@ This repository aims to generate CHIRP memory files to be loaded in your Quanshe
 
 # Generated CSVs
 
-Generated CSVs are available in the release tab of this repository. The files are generated once a day.
+Generated CSVs are available in the release tab of this repository. Releases follow the [AIRAC](https://en.wikipedia.org/wiki/Aeronautical_Information_Publication) cycle: a new release (e.g. `airac-2611`) is published every 28 days, on the cycle's effective date.
+
+The latest version of any file is always available at a stable link, for example:
+`https://github.com/diaznet/chirp-atc/releases/latest/download/CH_AIRPORTS_GENEVA-LEMAN.CSV`
+
+Note that the data comes from OpenAIP, a community-maintained database that is not itself updated on the AIRAC schedule.
 
 There is a set per country, and a set per specific area (see [below](#areas-table)).
 

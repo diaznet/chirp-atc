@@ -1,4 +1,5 @@
 pycountry==24.6.1
-geopy
-shapely
-loguru
+geopy>=2.4,<3
+shapely>=2.0,<3
+loguru>=0.7,<1
+PyYAML>=6.0,<7
