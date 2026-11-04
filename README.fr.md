@@ -26,7 +26,12 @@ Ce dépôt a pour but de générer des fichiers mémoire CHIRP à charger dans v
 
 # CSV générés
 
-Les CSV générés sont disponibles dans l'onglet « Releases » de ce dépôt. Les fichiers sont générés une fois par jour.
+Les CSV générés sont disponibles dans l'onglet « Releases » de ce dépôt. Les publications suivent le cycle [AIRAC](https://fr.wikipedia.org/wiki/Publication_d%27information_a%C3%A9ronautique) : une nouvelle release (par ex. `airac-2611`) est publiée tous les 28 jours, à la date d'entrée en vigueur du cycle.
+
+La dernière version de chaque fichier est toujours disponible via un lien stable, par exemple :
+`https://github.com/diaznet/chirp-atc/releases/latest/download/CH_AIRPORTS_GENEVA-LEMAN.CSV`
+
+À noter : les données proviennent d'OpenAIP, une base de données communautaire qui n'est elle-même pas mise à jour selon le calendrier AIRAC.
 
 Il y a un jeu par pays et un jeu par zone spécifique (voir [ci-dessous](#tableau-des-zones)).
 

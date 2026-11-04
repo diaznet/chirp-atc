@@ -8,7 +8,7 @@ Generate CHIRP-compatible CSV memory files for Quansheng radios containing ATC (
 - Converts 8.33 kHz channel designators to actual RF center frequencies per ICAO Doc 9718
 - Filters by country (ISO alpha-2 codes), frequency type, postal code, and radius
 - Outputs CHIRP-CSV format (ready to load into radio) or Console-JSON (for inspection)
-- Automated daily/weekly CSV generation via GitHub Actions with release publishing
+- Automated CSV generation via GitHub Actions, released once per AIRAC cycle (every 28 days)
 - Area-specific lists (≤200 frequencies) to fit Quansheng radio memory limits
 
 ## Target Users

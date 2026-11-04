@@ -18,6 +18,10 @@ class Consts():
     # OpenAIP publishes daily exports on a public HTTPS/S3 endpoint (anonymous GET).
     # See https://www.openaip.net/docs
     OEAIP_EXPORTS_BASE_URL: str = "https://storage.openaip.net/openaip-system-exports"
+    HTTP_TIMEOUT: float = 60                 # Seconds per export download attempt
+    HTTP_RETRIES: int = 3                    # Attempts per export download
+    HTTP_RETRY_BACKOFF: float = 5            # Seconds before 1st retry, doubled each retry
+    CHIRP_MAX_CHANNELS: int = 200            # Memory channels on Quansheng UV-K5 class radios
     OEAIP_SUPPORTED_TYPES = Literal["airports", "airspaces"]          # Supported Object types
     OEAIP_TYPES_MAPPING: dict = {                                         # Corresponding types in OpenAIP
         "airports": "apt",

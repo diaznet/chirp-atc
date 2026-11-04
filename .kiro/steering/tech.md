@@ -7,12 +7,12 @@
 | Package | Version | Purpose |
 |---------|---------|---------|
 | pycountry | 24.6.1 | ISO country code validation and lookup |
-| geopy | latest | Geocoding postal codes to lat/lon coordinates |
-| shapely | latest | Geographic filtering (point-in-circle radius checks) |
-| loguru | latest | Structured logging with debug mode |
+| geopy | 2.x | Geocoding postal codes (rate-limited, 1 req/s) and geodesic distances |
+| shapely | 2.x | Geographic filtering (distance to points and airspace polygons) |
+| loguru | 0.7.x | Structured logging with debug mode |
+| PyYAML | 6.x | Parsing areas.yaml in build_all.py |
 
-## Additional CI Dependency
-- `pyyaml` — installed in GitHub Actions to parse areas.yaml (not in requirements.txt)
+Dev/test dependencies are in `requirements-dev.txt` (pytest). Run tests with `python -m pytest`.
 
 ## Build & Run Commands
 ```bash
@@ -41,7 +41,9 @@ Channel designators from OpenAIP are converted to actual RF frequencies using IC
 - Fetched via Python stdlib `urllib.request` (no external client library required)
 
 ## CI/CD
-- GitHub Actions (ubuntu-latest, Python 3.x)
-- Scheduled: weekly on Monday at 06:00 UTC
-- Triggers: push to main or any branch
-- Artifacts: uploaded as GitHub Release assets (main/schedule) or workflow artifacts (branches)
+- GitHub Actions (ubuntu-latest, Python 3.12)
+- Releases follow the AIRAC cycle: tag `airac-YYNN`, published on the cycle's effective date
+- Scheduled daily at 06:00 UTC; a run is a no-op when the current cycle's release already exists
+- Triggers: schedule, push to any branch, manual dispatch
+- Push/dispatch on main updates the current cycle's release in place; other branches upload workflow artifacts only
+- Generate everything with `python build_all.py --output-dir dist`

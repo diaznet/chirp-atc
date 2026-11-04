@@ -1,3 +1,10 @@
+import csv
+from pathlib import Path
+
+from loguru import logger
+
+from openaip_frequencies.consts import Consts
+
 chirp_csv_model: dict = {
     'location': {
         'header_name': 'Location',
@@ -109,3 +116,47 @@ chirp_csv_model: dict = {
         'default_value': '',
     }
 }
+
+
+def csv_filename(country_code: str, type_: str, suffix: str = '') -> str:
+    """Release file name for a country/type/area, e.g. 'CH_AIRPORTS_GENEVA-LEMAN.CSV'."""
+    return '{}_{}{}.csv'.format(country_code, type_, suffix).upper()
+
+
+def to_chirp_rows(frequencies: list) -> list:
+    """Map frequency dictionaries to CHIRP CSV rows, numbering memory locations from 0."""
+    rows = []
+    for index, freq_data in enumerate(frequencies):
+        row = {}
+        for key, config in chirp_csv_model.items():
+            if key == 'location':
+                row[config['header_name']] = index
+            elif 'mapped_openaip_key' in config and config['mapped_openaip_key'] in freq_data:
+                row[config['header_name']] = freq_data[config['mapped_openaip_key']]
+            else:
+                row[config['header_name']] = config['default_value']
+        rows.append(row)
+    return rows
+
+
+def write_chirp_csv(path, frequencies: list, warn_if_too_large: bool = True) -> bool:
+    """
+    Write frequencies to a CHIRP CSV file.
+
+    Warns when the file holds more channels than a Quansheng radio can store,
+    unless warn_if_too_large is False (e.g. for full country lists).
+    Returns False (and writes nothing) when there are no frequencies.
+    """
+    if not frequencies:
+        return False
+    path = Path(path)
+    if warn_if_too_large and len(frequencies) > Consts.CHIRP_MAX_CHANNELS:
+        logger.warning("{} has {} channels, more than the {} a Quansheng radio can store".format(
+            path.name, len(frequencies), Consts.CHIRP_MAX_CHANNELS))
+    rows = to_chirp_rows(frequencies)
+    with open(path, mode="w", encoding='utf-8', newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=rows[0].keys())
+        writer.writeheader()
+        writer.writerows(rows)
+    logger.info("Wrote {} channels to {}".format(len(rows), path))
+    return True

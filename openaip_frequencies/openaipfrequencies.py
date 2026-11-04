@@ -8,10 +8,16 @@ Description: Class definition for OpenAIPFrequencies
 # Import necessary modules
 import pycountry
 import json
+import time
+import urllib.error
 import urllib.request
+from functools import lru_cache
 from geopy.geocoders import Nominatim
+from geopy.extra.rate_limiter import RateLimiter
 from geopy.distance import geodesic
-from shapely.geometry import Polygon
+from shapely.errors import ShapelyError
+from shapely.geometry import Point, shape
+from shapely.ops import nearest_points
 from loguru import logger
 
 from .consts import Consts
@@ -29,13 +35,54 @@ def channel_to_frequency(channel_mhz: float) -> str:
       Position 2 (10/35/60/85): freq = base + 8.333 kHz
       Position 3 (15/40/65/90): freq = base + 16.667 kHz
 
+    The result is in MHz with 6 decimals (1 Hz resolution, as CHIRP formats
+    frequencies), using the same 8333 / 16666 Hz offsets as CHIRP's 8.33 kHz
+    channel grid. Coarser rounding (e.g. 118.0083) puts the frequency off that
+    grid, and CHIRP then finds no valid tuning step for it.
+
     See references/Doc9718-Vol-II.md and references/understanding-8.33khz.md
     """
     khz = round(channel_mhz * 1000)
-    remainder = (khz % 100) % 25
-    base_khz = khz - remainder
-    offset_khz = {0: 0, 5: 0, 10: 25.0 / 3, 15: 50.0 / 3}.get(remainder, 0)
-    return f"{round((base_khz + offset_khz) / 1000.0, 4):.5f}"
+    remainder = khz % 25
+    base_hz = (khz - remainder) * 1000
+    offset_hz = {0: 0, 5: 0, 10: 25000 // 3, 15: 2 * (25000 // 3)}.get(remainder, 0)
+    hz = base_hz + offset_hz
+    return f"{hz // 1_000_000}.{hz % 1_000_000:06d}"
+
+
+@lru_cache(maxsize=None)
+def _fetch_export(url: str) -> bytes:
+    """
+    Download an OpenAIP export, retrying transient failures.
+
+    Results are cached for the lifetime of the process, so several areas of the
+    same country only download each export once.
+    """
+    for attempt in range(1, Consts.HTTP_RETRIES + 1):
+        try:
+            logger.debug("Fetching OpenAIP export from {} (attempt {})".format(url, attempt))
+            with urllib.request.urlopen(url, timeout=Consts.HTTP_TIMEOUT) as response:
+                return response.read()
+        except urllib.error.HTTPError as e:
+            # 4xx errors (e.g. no export for this country) will not fix themselves.
+            if e.code < 500 or attempt == Consts.HTTP_RETRIES:
+                raise
+            error = e
+        except (urllib.error.URLError, TimeoutError) as e:
+            if attempt == Consts.HTTP_RETRIES:
+                raise
+            error = e
+        delay = Consts.HTTP_RETRY_BACKOFF * 2 ** (attempt - 1)
+        logger.warning("Fetching {} failed ({}), retrying in {}s".format(url, error, delay))
+        time.sleep(delay)
+    raise AssertionError("unreachable")
+
+
+# Nominatim's usage policy allows at most one request per second.
+_geocode = RateLimiter(
+    Nominatim(user_agent="OpenAIPFrequencies class from chirp-atc (see https://github.com/diaznet/chirp-atc)").geocode,
+    min_delay_seconds=1.1,
+)
 
 
 class OpenAIPFrequencies:
@@ -45,7 +92,8 @@ class OpenAIPFrequencies:
     Attributes:
         country_code (str): ISO alpha-2 country code.
         postal_code (str, optional): Postal code for location-based filtering.
-        radius (int, optional): Search radius in kilometers.
+        radius (float, optional): Search radius in kilometers.
+        location (tuple, optional): (latitude, longitude) of the search center.
 
     Methods:
         _validate_country_code(): Validates the provided country code.
@@ -56,17 +104,22 @@ class OpenAIPFrequencies:
         get_default_radius() -> float: Returns the default radius for searches.
         get_frequencies(type_: Consts.OEAIP_SUPPORTED_TYPES) -> list: Retrieves filtered frequencies.
     """
-    def __init__(self, _country_code: str, _postal_code: str = None, _radius: int = None) -> None:
+    def __init__(self, _country_code: str, _postal_code: str = None, _radius: float = None,
+                 _location: tuple = None) -> None:
         self.country_code = _country_code
         self._validate_country_code()
 
         self.postal_code = _postal_code
-        if self.postal_code:
+        if _location is not None:
+            self.location = tuple(_location)
+        elif self.postal_code:
             self.location = self._get_coordinates_from_postal_code()
+        else:
+            self.location = None
 
         if _radius:
             self.radius = _radius
-        elif _postal_code:
+        elif self.location is not None:
             self.radius = Consts.DEFAULT_RADIUS
         else:
             self.radius = None
@@ -101,9 +154,7 @@ class OpenAIPFrequencies:
             type_code=Consts.OEAIP_TYPES_MAPPING.get(type, ""))
         url = "{base_url}/{filename}".format(
             base_url=Consts.OEAIP_EXPORTS_BASE_URL, filename=filename)
-        logger.debug("Fetching OpenAIP export from {}".format(url))
-        with urllib.request.urlopen(url) as response:
-            return json.loads(response.read().decode("utf-8"))
+        return json.loads(_fetch_export(url).decode("utf-8"))
 
     def _get_coordinates_from_postal_code(self) -> tuple:
         """
@@ -116,8 +167,9 @@ class OpenAIPFrequencies:
             ValueError: If the postal code is invalid.
         """
 
-        geolocator = Nominatim(user_agent="OpenAIPFrequencies class from chirp-atc (see https://github.com/diaznet/chirp-atc)")
-        location = geolocator.geocode({'postalCode': self.postal_code, 'country': self.country_code})
+        # 'postalcode' is the structured-query key Nominatim understands; unknown
+        # keys are silently ignored, which would geocode the whole country instead.
+        location = _geocode({'postalcode': self.postal_code, 'country': self.country_code})
         if location:
             return (location.latitude, location.longitude)
         else:
@@ -125,31 +177,34 @@ class OpenAIPFrequencies:
 
     def _is_within_radius(self, geometry) -> bool:
         """
-        Checks whether the given geographic geometry is within the specified radius.
+        Checks whether the given GeoJSON geometry is within the specified radius.
+
+        Points are measured directly. For areas (e.g. airspace polygons), the
+        distance is measured to the closest point of the area, and is zero when
+        the search center lies inside it.
 
         Args:
-            geometry (dict): A dictionary containing geographic coordinates.
+            geometry (dict): A GeoJSON geometry ([longitude, latitude] coordinates).
 
         Returns:
             bool: True if the location is within the radius, False otherwise.
         """
 
-        geom_type = geometry.get("type")
-        coordinates = geometry.get("coordinates")
-
-        if not coordinates or not geom_type:
+        if not geometry or not geometry.get("type") or not geometry.get("coordinates"):
             return False
 
-        if geom_type == "Point":
-            point = (coordinates[1], coordinates[0])  # lat, lon
-            return geodesic(self.location, point).km <= self.radius
+        try:
+            geom = shape(geometry)
+        except (ShapelyError, ValueError, TypeError, AttributeError, IndexError) as e:
+            logger.debug("Unsupported geometry {}: {}".format(geometry.get("type"), e))
+            return False
 
-        elif geom_type == "Polygon":
-            polygon = Polygon([(lat, lon) for lat, lon in coordinates[0]])
-            centroid = polygon.centroid
-            return geodesic(self.location, (centroid.y, centroid.x)).km <= self.radius
-
-        return False
+        lat, lon = self.location
+        center = Point(lon, lat)
+        if geom.contains(center):
+            return True
+        nearest = nearest_points(geom, center)[0]
+        return geodesic(self.location, (nearest.y, nearest.x)).km <= self.radius
 
     @staticmethod
     def get_supported_types() -> Consts.OEAIP_SUPPORTED_TYPES:
@@ -189,32 +244,28 @@ class OpenAIPFrequencies:
         aip_data = self._get_openaip_data(type_)
         frequencies = []
         for item in aip_data:
-            if item['type'] in Consts.OEAIP_ENABLED_AIRPORT_TYPES[type_]:
-                if (self.postal_code and self._is_within_radius(item.get("geometry"))) or (self.postal_code is None and self.radius is None):
-                    logger.debug("Object {} in requested radius. Name: '{}'".format(item['_id'], item['name']))
+            if item['type'] not in Consts.OEAIP_ENABLED_AIRPORT_TYPES[type_]:
+                continue
+            if self.location is not None and not self._is_within_radius(item.get("geometry")):
+                logger.debug("Object {} not in requested radius. Name: '{}'".format(item['_id'], item['name']))
+                continue
+            logger.debug("Object {} in requested radius. Name: '{}'".format(item['_id'], item['name']))
 
-                    for frequency in item.get('frequencies', []):
-                        # Build the frequency name
-                        logger.debug('icaoCode: {}, altIdentifier: {}, item name: {}, frequency name: {}, frequency: {}'.format(item.get('icaoCode'), item.get('altIdentifier'), item.get('name'), frequency.get('name'), frequency.get('value')))
-                        frequency_name = u' '.join(u"{} {}".format(
-                            # Try with 'icaoCode', if not present, use 'altIdentifier'.
-                            # Fallback to 'name' of none worked.
-                            item.get(
-                                'icaoCode',
-                                item.get('altIdentifier', '')
-                                ),
-                            frequency.get('name', item.get('name'))).split())
-                        raw_freq = frequency.get('value')
-                        if raw_freq is None:
-                            continue
-                        actual_freq = channel_to_frequency(float(raw_freq))
-                        frequencies.append({
-                            "frequency": actual_freq,
-                            "name": frequency_name,
-                            "comment": type_.upper()
-                        })
-                else:
-                    logger.debug("Object {} not in requested radius. Name: '{}'".format(item['_id'], item['name']))
+            # Prefix with 'icaoCode', or 'altIdentifier' if absent. Objects without
+            # an identifier (most airspaces) get no prefix, keeping names short.
+            prefix = item.get('icaoCode') or item.get('altIdentifier') or ''
+            for frequency in item.get('frequencies', []):
+                logger.debug('icaoCode: {}, altIdentifier: {}, item name: {}, frequency name: {}, frequency: {}'.format(item.get('icaoCode'), item.get('altIdentifier'), item.get('name'), frequency.get('name'), frequency.get('value')))
+                raw_freq = frequency.get('value')
+                if raw_freq is None:
+                    continue
+                frequency_name = ' '.join('{} {}'.format(
+                    prefix, frequency.get('name') or item.get('name', '')).split())
+                frequencies.append({
+                    "frequency": channel_to_frequency(float(raw_freq)),
+                    "name": frequency_name,
+                    "comment": type_.upper()
+                })
 
         frequencies_noduplicates = [i for n, i in enumerate(frequencies) if i not in frequencies[:n]]
         return sorted(frequencies_noduplicates, key=lambda frequency: frequency['name'])
